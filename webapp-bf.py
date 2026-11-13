@@ -143,10 +143,16 @@ table.bf-table th { padding-bottom: 6px;
                     border-bottom: 2px solid rgba(128,128,128,0.5); }
 table.bf-table td.sprite { padding: 2px; }
 
-table.bf-table .mon { width: 100%; max-width: 60px; aspect-ratio: 1 / 1;
-                      margin: 0 auto; overflow: hidden; }
-table.bf-table .mon img { display: block; width: 100%; height: 100%;
-                          max-width: none; object-fit: contain; margin: 0; }
+table.bf-table .mon { position: relative; width: 100%; max-width: 60px;
+                      margin: 0 auto; padding: 0; overflow: hidden; }
+table.bf-table .mon::before { content: ""; display: block;
+                              padding-top: 100%; }
+table.bf-table .mon img { position: absolute !important; top: 0; left: 0;
+                          width: 100% !important; height: 100% !important;
+                          max-width: none !important; margin: 0 !important;
+                          padding: 0 !important; transform: none !important;
+                          object-fit: contain; }
+                          
 table.bf-table .shadow {
     background: radial-gradient(circle, rgba(130,40,200,0.95) 0%,
                 rgba(130,40,200,0.6) 55%, rgba(130,40,200,0) 78%); }
