@@ -4,7 +4,7 @@ import re
 import pandas as pd
 import requests
 import streamlit as st
-import streamlit.components.v1 as components
+
 
 BASE = "https://api.zygarden.gg/api/v2"
 SPRITE_URL = "https://cdn.zygarden.gg/sprites/{}.png"
@@ -120,38 +120,41 @@ def build_rows(tournaments, trainer_name):
 
     return rows, sorted(set(excluded_bf))
 
+#---------------------------------------
+# Sprite URL
+#---------------------------------------
+
+
+def sprite_url(species_id):
+    return SPRITE_URL.format(species_id.replace("_", "-"))
+
 
 # ---------------------------------------
 # HTML table
 # ---------------------------------------
 CSS = """
-body { font-family: Arial, sans-serif; background: transparent;
-       color: #000; margin: 0; }
-@media (prefers-color-scheme: dark) { body { color: #fafafa; } }
+table.bf-table { border-collapse: collapse; table-layout: fixed;
+                 width: 100%; max-width: 1100px; margin: 0 auto; }
+table.bf-table th, table.bf-table td {
+    padding: 2px 4px; text-align: center; font-size: 14px;
+    white-space: nowrap; background: transparent; color: inherit;
+    border: none; border-bottom: 1px solid rgba(128,128,128,0.25); }
+table.bf-table th { padding-bottom: 6px;
+                    border-bottom: 2px solid rgba(128,128,128,0.5); }
+table.bf-table td.sprite { padding: 2px; }
 
-table { border-collapse: collapse; table-layout: fixed;
-        width: 100%; max-width: 1100px; margin: 0 auto; }
-th, td { padding: 2px 4px; text-align: center; font-size: 14px;
-         white-space: nowrap; background: none;
-         border-bottom: 1px solid rgba(128,128,128,0.25); }
-th { padding-bottom: 6px; border-bottom: 2px solid rgba(128,128,128,0.5); }
-td.sprite { padding: 2px; }
-
-.mon { width: 100%; max-width: 60px; aspect-ratio: 1 / 1; margin: 0 auto;
-       display: flex; align-items: center; justify-content: center;
-       font-size: 9px; word-break: break-all; overflow: hidden; }
-.mon img { max-width: 92%; max-height: 92%; }
-.shadow { background: radial-gradient(circle, rgba(130,40,200,0.95) 0%,
-          rgba(130,40,200,0.6) 55%, rgba(130,40,200,0) 78%); }
+table.bf-table .mon { width: 100%; max-width: 60px; aspect-ratio: 1 / 1;
+                      margin: 0 auto; overflow: hidden; }
+table.bf-table .mon img { display: block; width: 100%; height: 100%;
+                          max-width: none; object-fit: contain; margin: 0; }
+table.bf-table .shadow {
+    background: radial-gradient(circle, rgba(130,40,200,0.95) 0%,
+                rgba(130,40,200,0.6) 55%, rgba(130,40,200,0) 78%); }
 
 @media (max-width: 600px) {
-  th, td { font-size: 11px; padding: 2px 1px; }
+  table.bf-table th, table.bf-table td { font-size: 11px; padding: 2px 1px; }
 }
 """
-
-
-def sprite_url(species_id):
-    return SPRITE_URL.format(species_id.replace("_", "-"))
 
 
 def mon_cell(species_id, is_shadow):
@@ -159,8 +162,7 @@ def mon_cell(species_id, is_shadow):
     cls = "mon shadow" if is_shadow else "mon"
     return (
         f'<td class="sprite"><div class="{cls}" title="{sid}">'
-        f'<img src="{html.escape(sprite_url(species_id))}" alt="{sid}" '
-        f'onerror="this.replaceWith(document.createTextNode(this.alt))">'
+        f'<img src="{html.escape(sprite_url(species_id))}" alt="{sid}">'
         f"</div></td>"
     )
 
@@ -185,15 +187,17 @@ def build_html(rows):
                 cells.append('<td class="sprite"></td>')
         html_rows.append("<tr>" + "".join(cells) + "</tr>")
 
-    # The first three columns get fixed widths; the six sprite columns
-    # split whatever is left evenly.
     colgroup = (
         '<colgroup><col style="width:16%"><col style="width:11%">'
         '<col style="width:11%"></colgroup>'
     )
 
+    # Everything is collapsed to a single line: blank lines or indentation
+    # inside HTML can make Streamlit's markdown parser treat it as code.
+    css = " ".join(CSS.split())
     return (
-        f"<style>{CSS}</style><table>{colgroup}{header}"
+        f"<style>{css}</style>"
+        f'<table class="bf-table">{colgroup}{header}'
         f"<tbody>{''.join(html_rows)}</tbody></table>"
     )
 
@@ -262,7 +266,8 @@ if not rows:
     st.stop()
 
 st.subheader(trainer["name"])
-components.html(build_html(rows), height=len(rows) * 64 + 50, scrolling=True)
+st.markdown(build_html(rows), unsafe_allow_html=True)
+
 
 st.download_button(
     "Download as CSV",
