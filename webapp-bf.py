@@ -7,7 +7,7 @@ import streamlit as st
 
 
 BASE = "https://api.zygarden.gg/api/v2"
-SPRITE_URL = "https://cdn.zygarden.gg/sprites/{}-shiny.png"
+SPRITE_URL = "https://cdn.zygarden.gg/sprites/{}.png"
 
 st.set_page_config(page_title="Battle Frontier Usage History", layout="wide")
 
