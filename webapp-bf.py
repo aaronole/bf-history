@@ -125,15 +125,28 @@ def build_rows(tournaments, trainer_name):
 # HTML table
 # ---------------------------------------
 CSS = """
-body { font-family: Arial, sans-serif; background: transparent; margin: 0; }
-table { border-collapse: collapse; }
-td { background: #ccc; color: #000; padding: 2px 10px; text-align: center; }
+body { font-family: Arial, sans-serif; background: transparent;
+       color: #000; margin: 0; }
+@media (prefers-color-scheme: dark) { body { color: #fafafa; } }
+
+table { border-collapse: collapse; table-layout: fixed;
+        width: 100%; max-width: 1100px; margin: 0 auto; }
+th, td { padding: 2px 4px; text-align: center; font-size: 14px;
+         white-space: nowrap; background: none;
+         border-bottom: 1px solid rgba(128,128,128,0.25); }
+th { padding-bottom: 6px; border-bottom: 2px solid rgba(128,128,128,0.5); }
 td.sprite { padding: 2px; }
-.mon { display: inline-block; width: 60px; height: 60px; line-height: 60px;
-       font-size: 10px; word-break: break-all; }
-.mon img { max-width: 56px; max-height: 56px; vertical-align: middle; }
+
+.mon { width: 100%; max-width: 60px; aspect-ratio: 1 / 1; margin: 0 auto;
+       display: flex; align-items: center; justify-content: center;
+       font-size: 9px; word-break: break-all; overflow: hidden; }
+.mon img { max-width: 92%; max-height: 92%; }
 .shadow { background: radial-gradient(circle, rgba(130,40,200,0.95) 0%,
           rgba(130,40,200,0.6) 55%, rgba(130,40,200,0) 78%); }
+
+@media (max-width: 600px) {
+  th, td { font-size: 11px; padding: 2px 1px; }
+}
 """
 
 
@@ -153,10 +166,14 @@ def mon_cell(species_id, is_shadow):
 
 
 def build_html(rows):
+    header = (
+        "<thead><tr><th>Cycle</th><th>Round</th><th>Score</th>"
+        '<th colspan="6"></th></tr></thead>'
+    )
+
     html_rows = []
     for r in rows:
         cells = [
-            f"<td>{html.escape(r['Trainer'])}</td>",
             f"<td>{html.escape(r['Cycle'])}</td>",
             f"<td>{r['Round']}</td>",
             f"<td>{html.escape(r['Score'])}</td>",
@@ -168,8 +185,16 @@ def build_html(rows):
                 cells.append('<td class="sprite"></td>')
         html_rows.append("<tr>" + "".join(cells) + "</tr>")
 
+    # The first three columns get fixed widths; the six sprite columns
+    # split whatever is left evenly.
+    colgroup = (
+        '<colgroup><col style="width:16%"><col style="width:11%">'
+        '<col style="width:11%"></colgroup>'
+    )
+
     return (
-        f"<style>{CSS}</style><table>{''.join(html_rows)}</table>"
+        f"<style>{CSS}</style><table>{colgroup}{header}"
+        f"<tbody>{''.join(html_rows)}</tbody></table>"
     )
 
 
@@ -237,7 +262,7 @@ if not rows:
     st.stop()
 
 st.subheader(trainer["name"])
-components.html(build_html(rows), height=len(rows) * 66 + 20, scrolling=True)
+components.html(build_html(rows), height=len(rows) * 64 + 50, scrolling=True)
 
 st.download_button(
     "Download as CSV",
