@@ -114,6 +114,8 @@ def build_rows(tournaments, trainer_name):
                 "Cycle": cycle,
                 "Round": party["round"],
                 "Score": score,
+                "Wins": party["score"].get("wins", 0),
+                "Losses": party["score"].get("losses", 0),
                 "Team": [(p["id"], bool(p.get("isShadow")))
                          for p in party["battleParty"]],
             })
@@ -152,7 +154,7 @@ table.bf-table .mon img { position: absolute !important; top: 0; left: 0;
                           max-width: none !important; margin: 0 !important;
                           padding: 0 !important; transform: none !important;
                           object-fit: contain; }
-                          
+
 table.bf-table .shadow {
     background: radial-gradient(circle, rgba(130,40,200,0.95) 0%,
                 rgba(130,40,200,0.6) 55%, rgba(130,40,200,0) 78%); }
@@ -222,6 +224,15 @@ def build_csv(rows):
     return pd.DataFrame(records).to_csv(index=False).encode("utf-8")
 
 
+def winrate_text(rows):
+    wins = sum(r["Wins"] for r in rows)
+    losses = sum(r["Losses"] for r in rows)
+    total = wins + losses
+    if total == 0:
+        return ""
+    return f"Overall BF Winrate: {wins / total * 100:.1f}%"
+
+
 # ---------------------------------------
 # Page
 # ---------------------------------------
@@ -271,7 +282,15 @@ if not rows:
     st.info(f"No Battle Frontier history found for {trainer['name']}.")
     st.stop()
 
-st.subheader(trainer["name"])
+header_html = (
+    '<div style="display:flex; flex-wrap:wrap; justify-content:space-between; '
+    'align-items:baseline; column-gap:2rem;">'
+    f'<h3 style="margin:0;">{html.escape(trainer["name"])}</h3>'
+    f'<h3 style="margin:0;">{html.escape(winrate_text(rows))}</h3>'
+    "</div>"
+)
+st.markdown(header_html, unsafe_allow_html=True)
+
 st.markdown(build_html(rows), unsafe_allow_html=True)
 
 
